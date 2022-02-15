@@ -75,6 +75,7 @@ Output: [[motif1.1, motif 1.2, motif 1.3],[motif2.1, motif 2.2, motif 2.3], ...]
 
 
 **Working code to generate a line and a rectangle, not at the origin, using pycairo**
+
 '''
 import cairo
 from IPython import display
