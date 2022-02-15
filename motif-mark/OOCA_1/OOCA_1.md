@@ -82,14 +82,14 @@ from IPython import display
 
 width, height = 1000, 500
 
-surface = cairo.SVGSurface("line_and_rectangle.png", width, height) # create png with w/h dimensions
-context = cairo.Context(surface) # create the surface on which to draw
+surface = cairo.SVGSurface("line_and_rectangle.png", width, height) 
+context = cairo.Context(surface)
 context.set_line_width(3)
-context.move_to(100,25) # origin of the line, left-most point
-context.line_to(500,25) # right-most point
+context.move_to(100,25) 
+context.line_to(500,25) 
 context.stroke() 
 
-context.rectangle(300,13,140,25) # (x, y, width, height)
+context.rectangle(300,13,140,25) 
 context.fill() 
 surface.write_to_png("line_and_rectangle.png")
 '''
