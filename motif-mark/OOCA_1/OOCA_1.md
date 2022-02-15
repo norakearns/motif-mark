@@ -9,32 +9,32 @@
 1) Read in fasta file
 
 def Read_fasta(fasta_file_handle):
-'''
-A function which takes as its input a fasta and creates a tuple for the file:
-[name, sequence]
 
-Input: fasta_file_handle
-Output: [name, sequence] arrays
-'''
+    A function which takes as its input a fasta and creates a tuple for the file:
+    [name, sequence]
+
+    Input: fasta_file_handle
+    Output: [name, sequence] arrays
+
 
 2) Read in motif file
 
 def Read_motif(motif_file_handle):
-'''
-A function which takes as its input a file of motifs (10 bases each, one motif per line) and outputs a list of motifs
 
-Input: motif_file_handle
-Output: array of motifs [motif1, motif2, motif3...]
-'''
+    A function which takes as its input a file of motifs (10 bases each, one motif per line) and outputs a list of motifs
+
+    Input: motif_file_handle
+    Output: array of motifs [motif1, motif2, motif3...]
+
 
 3) Generate all possible motifs
 
 def Create_motifs(array of motifs):
-'''
-A function which takes as its input the initial array of motifs and then identifies ambiguous motifs and creates all possible motifs from those ambiguous motifs;
-Input: [motif1, motif2, motif3]
-Output: [[motif1.1, motif 1.2, motif 1.3],[motif2.1, motif 2.2, motif 2.3], ...]
-'''
+
+    A function which takes as its input the initial array of motifs and then identifies ambiguous motifs and creates all possible motifs from those ambiguous motifs;
+    Input: [motif1, motif2, motif3]
+    Output: [[motif1.1, motif 1.2, motif 1.3],[motif2.1, motif 2.2, motif 2.3], ...]
+
 
 **class Sequence:**
 
