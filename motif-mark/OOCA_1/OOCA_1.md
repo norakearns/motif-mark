@@ -96,4 +96,5 @@ surface.write_to_png("line_and_rectangle.png")
 
 **The image that your code created**
 
-![line_rectangle_png](/Users/norakearns/bioinformatics/Bi625/motif-mark/line_and_rectangle.png)
+<img src="https://user-images.githubusercontent.com/59736592/153997532-5fea5df8-3566-4bcb-8df4-6937d6de2d57.png" alt = "line_and_rectangle" width = "900">
+
