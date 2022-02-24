@@ -73,11 +73,11 @@ class Sequence:
         for motif in motif_dict.keys(): # for each motif
             motif_occurence_dict[motif] = []
             for possible_motif in motif_dict[motif]: # for each motif option (because motifs are ambiguous)
-                motif_pattern_exon = re.compile(possible_motif)
-                motif_patter_intron = re.compile(possible_motif.lower())
-                motif_pattern_intron_occurence = [[m.start(),m.end()] for m in motif_patter_intron.finditer(self.sequence)]
-                if len(motif_pattern_intron_occurence) != 0:
-                    motif_occurence_dict[motif].append(motif_pattern_intron_occurence)
+                motif_pattern = re.compile(possible_motif)
+                #motif_patter_intron = re.compile(possible_motif.lower())
+                motif_pattern_occurence = [[m.start(),m.end()] for m in motif_pattern.finditer((self.sequence).upper())]
+                if len(motif_pattern_occurence) != 0:
+                    motif_occurence_dict[motif].append(motif_pattern_occurence)
         return motif_occurence_dict
 
 
@@ -183,12 +183,13 @@ class Plot:
                     context.set_source_rgb(color_r, color_g, color_b)
                     context.rectangle((100+start),(150 + (200*(plot_index-1))),length,(100)) # (x, y, width, height)
                     context.fill()
-                    #context.stroke()
+                    context.stroke()
 
 
 
 motifs_pointer = Motifs("Fig_1_motifs.txt")
 motif_dict = motifs_pointer.get_all_motif_options()
+
 
 record_list = get_fasta_records("Figure_1.fasta")
 sequence1 = Sequence(record_list[0])
