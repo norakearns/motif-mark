@@ -9,6 +9,17 @@ import math
 from IPython import display
 from IPython.display import SVG, display, Image
 import re
+import argparse
+
+def get_args():
+    parser = argparse.ArgumentParser(description="A program to input coverage limit")
+    parser.add_argument("-f", help="fasta file", required=True, type=str)
+    parser.add_argument("-m", help="motifs file", required=True, type=str)
+    return parser.parse_args()
+
+args = get_args()
+fasta_filename = args.f 
+motif_filename = args.m
 
 
 IPUAC_dict = {'A':['A'],'C':['C'], 'G':['G'],'T':['T'],'U':['U'],
@@ -16,6 +27,20 @@ IPUAC_dict = {'A':['A'],'C':['C'], 'G':['G'],'T':['T'],'U':['U'],
                 'R':['A','G'],'Y':['C','T'], 'B':['C','G','T'],
                 'D':['A','G','T'],'H':['A','C','T'],'V':['A','C','G'],
                 'N':['A','C','T','G']}
+
+def get_names(file):
+    '''
+    Takes a Fasta file and returns an array of just the sequence IDs
+    Input: fasta_file_handle
+    Output: list of sequence IDs
+    '''
+    file_handle = open(file, "rt")
+    names_list = []
+    lines = file_handle.readlines()
+    for line in lines:
+        if line.startswith(">"):
+            names_list.append(line.strip("\n")[1:])
+    return names_list
 
 
 def get_fasta_records(file):
@@ -43,7 +68,6 @@ class Sequence:
     def __init__(self, sequence):
         self.sequence = sequence
         self.exon, self.seq_length = self.find_exon_introns(self.sequence)
-        #self.intron1, self.exon, self.intron2 = self.find_exon_introns(self.sequence)
     
     def find_exon_introns(self, sequence):
         '''
@@ -133,19 +157,13 @@ class Motifs:
 
 
 class Plot:
-    def __init__(self):
+    def __init__(self, plot_width, plot_height, file_name):
         self.my_motif_colors = {}
-    #     self.width = plot_width
-    #     self.height = plot_height 
-    #     surface = cairo.SVGSurface("line_and_rectangle.png", width, height)
-    #     self.file = file_name
-    #     self.surface, self.context = cairo.SVGSurface(self.file, self.width, self.height) # create png with w/h dimensions
-    #     self.context = self.create_context(self.file, self.width, self.height) # create the surface on which to draw
-
-    # def create_context(self, file, width, height):
-    #     surface = cairo.SVGSurface(file, width, height)
-    #     context = cairo.Context(surface)
-    #     return context
+        self.width = plot_width
+        self.height = plot_height 
+        self.file = file_name
+        self.surface = cairo.SVGSurface(self.file, self.width, self.height) # create png with w/h dimensions
+        self.context = cairo.Context(self.surface)
 
     def set_motif_colors(self, motif_string, colors): # setter
         self.my_motif_colors[motif_string] = colors
@@ -156,19 +174,23 @@ class Plot:
         color_b = self.my_motif_colors[motif_string][2]
         return color_r, color_g, color_b
     
-    def plot_motifs(self, motif_occurence_dict, sequence_pointer, seq, plot_index, context):
+    def plot_motifs(self, motif_occurence_dict, sequence_pointer, seq, plot_index):
         exon = sequence_pointer.find_exon_introns(seq)[0]
         exon_start = exon[0]
         exon_len = (exon[1]-exon[0])
         seq_len = sequence_pointer.find_exon_introns(seq)[1]
-        context.set_line_width(3)
-        context.set_source_rgb(0,0,0)
-        context.move_to(100, (200*plot_index)) # origin of the line, left-most point
-        context.line_to((100+seq_len),(200*plot_index)) # right-most point
-        context.stroke() 
-        context.rectangle((100+exon_start),(150 + (200*(plot_index-1))),exon_len,(100)) # (x, y, width, height)
-        context.set_source_rgba(0,0,0, 0.1)
-        context.fill()
+        self.context.set_source_rgb(0,0,0)
+        self.context.move_to(50,(100 + (200*(plot_index-1))))
+        self.context.set_font_size(20)
+        self.context.show_text(names_list[plot_index-1])
+        self.context.set_line_width(3)
+        self.context.set_source_rgb(0,0,0)
+        self.context.move_to(100, (200*plot_index)) # origin of the line, left-most point
+        self.context.line_to((100+seq_len),(200*plot_index)) # right-most point
+        self.context.stroke() 
+        self.context.rectangle((100+exon_start),(150 + (200*(plot_index-1))),exon_len,(100)) # (x, y, width, height)
+        self.context.set_source_rgba(0,0,0, 0.1)
+        self.context.fill()
 
 
         for motif in motif_occurence_dict.keys():
@@ -180,20 +202,58 @@ class Plot:
                     length = (location[1]-location[0])
                     motif_blocks.append(location)
                     color_r, color_g, color_b = self.get_colors_for_motif(motif)
-                    context.set_source_rgb(color_r, color_g, color_b)
-                    context.rectangle((100+start),(150 + (200*(plot_index-1))),length,(100)) # (x, y, width, height)
-                    context.fill()
-                    context.stroke()
+                    self.context.set_source_rgba(color_r, color_g, color_b, 0.5)
+                    self.context.rectangle((100+start),(150 + (200*(plot_index-1))),length,(100)) # (x, y, width, height)
+                    self.context.fill()
+                    self.context.stroke()
+    
+        # Create Key
+        self.context.rectangle(850, 100, 20, 20) # (x, y, width, height)
+        self.context.set_source_rgba(0,0.2,0.8, 0.5) # blue
+        self.context.fill()
+
+        self.context.move_to(880,120)
+        self.context.set_font_size(20)
+        self.context.set_source_rgb(0,0,0)
+        self.context.show_text("CATAG")
+
+        self.context.rectangle(850, 140, 20, 20) # (x, y, width, height)
+        self.context.set_source_rgba(0.2,0.9,0.8, 0.5) # green
+        self.context.fill()
+
+        self.context.move_to(880,160)
+        self.context.set_font_size(20)
+        self.context.set_source_rgb(0,0,0)
+        self.context.show_text("YYYYYYYYYY")
+
+        self.context.rectangle(850, 180, 20, 20) # (x, y, width, height)
+        self.context.set_source_rgba(1,0.6,0.3, 0.5) # orange
+        self.context.fill()
+
+        self.context.move_to(880,200)
+        self.context.set_font_size(20)
+        self.context.set_source_rgb(0,0,0)
+        self.context.show_text("YGCY")
+
+        self.context.rectangle(850, 220, 20, 20) # (x, y, width, height)
+        self.context.set_source_rgba(0,0,0,0.1) # orange
+        self.context.fill()
+
+        self.context.move_to(880,238)
+        self.context.set_font_size(20)
+        self.context.set_source_rgb(0,0,0)
+        self.context.show_text("EXON")
+    
+        self.surface.write_to_png("Figure_1.png")
 
 
-
-motifs_pointer = Motifs("Fig_1_motifs.txt")
+motifs_pointer = Motifs(motif_filename)
 motif_dict = motifs_pointer.get_all_motif_options()
 
+record_list = get_fasta_records(fasta_filename)
+names_list = get_names(fasta_filename)
 
-record_list = get_fasta_records("Figure_1.fasta")
 sequence1 = Sequence(record_list[0])
-
 sequence2 = Sequence(record_list[1])
 sequence3 = Sequence(record_list[2])
 sequence4 = Sequence(record_list[3])
@@ -203,55 +263,15 @@ MOdict2 = sequence2.get_motif_occurence_dict(motif_dict)
 MOdict3 = sequence3.get_motif_occurence_dict(motif_dict)
 MOdict4 =  sequence4.get_motif_occurence_dict(motif_dict)
 
-height = 1200
-width = 1200
+myplot = Plot(1200, 1200, "Figure_1.png")
+myplot.set_motif_colors("GCUAG", [1,0.8,0.2 ]) # yellow
+myplot.set_motif_colors("CATAG", [0,0.2,0.8 ]) # blue
+myplot.set_motif_colors("YYYYYYYYYY", [0.2,0.9,0.8]) # green
+myplot.set_motif_colors("YGCY", [1,0.6,0.3]) # orange
 
-surface = cairo.SVGSurface("line_and_rectangle.svg", width, height)
-context = cairo.Context(surface)
-
-myplot = Plot()
-myplot.set_motif_colors("GCUAG", [255,255,0]) # yellow
-myplot.set_motif_colors("CATAG", [0,0,255]) # blue
-myplot.set_motif_colors("YYYYYYYYYY", [255,0,0]) # red
-myplot.set_motif_colors("YGCY", [255,0,255]) # fuschia
-
-myplot.plot_motifs(MOdict1, sequence1, record_list[0], 1, context)
-myplot.plot_motifs(MOdict2, sequence2, record_list[1], 2, context)
-myplot.plot_motifs(MOdict3, sequence3, record_list[2], 3, context)
-myplot.plot_motifs(MOdict4, sequence4, record_list[3], 4, context)
+myplot.plot_motifs(MOdict1, sequence1, record_list[0], 1)
+myplot.plot_motifs(MOdict2, sequence2, record_list[1], 2)
+myplot.plot_motifs(MOdict3, sequence3, record_list[2], 3)
+myplot.plot_motifs(MOdict4, sequence4, record_list[3], 4)
 
 
-
-
-
-
-
-
-
-#surface.write_to_png("line_and_rectangle.png")
-
-
-
-# for motif in motif_occurence_dict.keys():
-#     motif_blocks = []
-#     for location_array in motif_occurence_dict[motif]:
-#         for location in location_array:
-#             start = location[0]
-#             length = location[1]
-#             motif_blocks.append(location)
-
-
-#sequence = Sequence("Figure_1.fasta")
-
-# what do I actually need to know?
-# I need to know the exon start position and end position, and the sequence length.
- # if motif == "GCAUG":
-                    #     context.set_source_rgb(255,255,0) # yellow
-                    # elif motif == "CATAG":
-                    #     context.set_source_rgb(0,0,255) # blue
-                    # elif motif == "YYYYYYYYYY":
-                    #     context.set_source_rgb(255,0,0) # reds
-                    # else:
-                    #     context.set_source_rgb(255,0,255) # fuschia
-# create gorup class to group things together
-# offset gets stored inside the group
