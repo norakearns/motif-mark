@@ -16,4 +16,40 @@ The following modules must be installed in your environment prior to running mot
   from IPython import display
 ```
 
-Download motif-mark-oop.py to your terminal 
+### Input file formats
+
+motif-mark-oop.py takes two input files: a file of motifs, and a fasta file.
+The motif file should have motifs separated by new lines. Example:
+```
+GCAUG
+ycgy
+YYYYYYYY
+CTAG
+```
+
+The gene sequences should be in fasta format. NOTE: EXONS must be CAPITALIZED and introns must be lowercase. Example:
+```
+>MBNL chr3:152446461-152447003 
+tgtaattaactacaaagaggagttatcctcccaataacaactcagtagtgcctttattgt
+gcatgcttagtcttgttattcgttgtatatggcattccgatgatttgtttttttatttgt
+tttttctcacctacccaaaaatgcactgctgcccccatgatgcacctctgcttgctgttt
+atgttaatgcgcttgaaccccactggcccattgccatcatgtgctcgctgcctgctaatt
+aagACTCAGTCGGCTGTCAAATCACTGAAGCGACCCCTCGAGGCAACCTTTGACCTGgta
+ctatgacctttcaccttttagcttggcatgtagctttattgtagatacaagttttttttt
+taaatcaactttaaaatatatatccttttttctgttatagagttgtaaagtacaatgaaa
+```
+
+### Run motif-mark-oop.py
+Download motif-mark-oop.py in the same directory as your fasta file and motif file (otherwise, pass the complete path to your fasta file and motif file as arguments).
+
+In the terminal, write:
+```
+./motif-mark-oop.py -f <fasta-file-name> -m <motif-file-name>
+```
+
+motif-mark-oop.py will output a single png file with all of your sequences annotated like the example below:
+![Figure_1](https://user-images.githubusercontent.com/59736592/156443067-f34f3897-0263-456d-91b5-64edeb626d08.png)
+
+
+
+
