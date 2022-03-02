@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-# conda activate /Users/norakearns/miniconda3/envs/motif
-from fileinput import filename
+import itertools
 from itertools import product
 import re
-from turtle import width
 import cairo
 import math
 from IPython import display
@@ -18,10 +16,11 @@ def get_args():
     return parser.parse_args()
 
 args = get_args()
-fasta_filename = args.f 
-motif_filename = args.m
+fasta_filename = args.f # -f file carrying the sequences in fasta format
+motif_filename = args.m # -m file carrying the motifs
+out_filename = fasta_filename.split('.')[0] + ".png"
 
-
+# Dictionary which holds all the possible nucleotides represented by a specific IUPAC characters
 IPUAC_dict = {'A':['A'],'C':['C'], 'G':['G'],'T':['T'],'U':['U'],
                 'W':['A','T'],'S':['G','C'],'M':['A','C'],'K':['G','T'],
                 'R':['A','G'],'Y':['C','T'], 'B':['C','G','T'],
@@ -41,7 +40,6 @@ def get_names(file):
         if line.startswith(">"):
             names_list.append(line.strip("\n")[1:])
     return names_list
-
 
 def get_fasta_records(file):
     '''
@@ -66,24 +64,19 @@ def get_fasta_records(file):
 
 class Sequence:
     def __init__(self, sequence):
-        self.sequence = sequence
+        self.sequence = sequence # to create the sequence object you pass in one of the fasta sequences
         self.exon, self.seq_length = self.find_exon_introns(self.sequence)
     
     def find_exon_introns(self, sequence):
         '''
-        This function takes as its input a DNA sequence with introns lowercase and exons UPPERCASE. It identifies the positions of the first intron, the exon
-        and the second intron.
+        This function takes as its input a DNA sequence with introns lowercase and exons UPPERCASE. It identifies the positions of the exon and the sequence length
         Input: tttgtttccacagAAAAACCTCTTCAGGCACTGGTGCCGAGGACCCTAGgtatgactcacctgt"
-        Output: ([0, 12], [13, 48], [49, 63])
+        Output: [13, 48], 100
         '''
-        intron = re.compile("[actgn]+")
         seq_len = len(sequence)
-        exon = re.compile("[ACTGN]+")
-        exon_positions =  [[m.start(),m.end()] for m in exon.finditer(sequence)]
-        intron_positions = [[m.start(),m.end()] for m in intron.finditer(sequence)]
-        intron1_start_end = [intron_positions[0][0], (intron_positions[0][1]-1)] 
+        exon = re.compile("[ACTGN]+") # exons are represented by uppercase letters
+        exon_positions =  [[m.start(),m.end()] for m in exon.finditer(sequence)] # find the start and stop of the exon
         exon_start_end = [exon_positions[0][0], (exon_positions[0][1]-1)]
-        intron2_start_end = [intron_positions[1][0], (intron_positions[1][1]-1)] 
         return exon_start_end, seq_len    
 
     
@@ -91,23 +84,21 @@ class Sequence:
         '''
         This function takes as its input a fasta sequence and the dictionary of all possible motifs, and returns a dictionary of each motif and where it is located in the sequence.
         Input: {"YGCY":["TGCT","CGCT",...]...}, and "tttgtttccacagAAAAACCTCTTCAGGCACTGGTGCCGAGGACCCTAGgtatgactcacctgt"
-        Output: {{"YGCY":[[25,29], [31,35]}}
+        Output: {"YGCY":[[25,29], [31,35]...}
         '''
         motif_occurence_dict = {}
-        for motif in motif_dict.keys(): # for each motif
-            motif_occurence_dict[motif] = []
-            for possible_motif in motif_dict[motif]: # for each motif option (because motifs are ambiguous)
-                motif_pattern = re.compile(possible_motif)
-                #motif_patter_intron = re.compile(possible_motif.lower())
-                motif_pattern_occurence = [[m.start(),m.end()] for m in motif_pattern.finditer((self.sequence).upper())]
-                if len(motif_pattern_occurence) != 0:
-                    motif_occurence_dict[motif].append(motif_pattern_occurence)
-        return motif_occurence_dict
+        for motif in motif_dict.keys(): # for each motif in the dictionary created in the motif class (which has as keys all the motifs, and values all the possible motifs an ambiguous motif could represent)
+            motif_occurence_dict[motif] = [] # store the motif as a key in motif_occurence_dict, and set the value to an empty list
+            for possible_motif in motif_dict[motif]: # for each motif option in motif_dict (because motifs are ambiguous)
+                motif_pattern = re.compile(possible_motif) # create a regular expression pattern
+                motif_pattern_occurence = [[m.start(),m.end()] for m in motif_pattern.finditer((self.sequence).upper())] # search for occurrences of it in the gene sequence. NOTE: the motifs have been made uppercase, so sequence.upper is used
+                if len(motif_pattern_occurence) != 0: # if there is an occurence of the motif inside the gene
+                    motif_occurence_dict[motif].append(motif_pattern_occurence) # add it to the value in the dictionary
+        return motif_occurence_dict 
 
 
 class Motifs:
     def __init__(self, motif_file_name):
-        # things that only have to happen one time 
         self.file = motif_file_name
         self.motif_array = self.init_motif_array(motif_file_name)
         self.motif_options_dict = self.find_all_motif_options()
@@ -134,7 +125,7 @@ class Motifs:
         '''
         Takes as input a single ambiguous motif and generates all possible motifs from it. Returns a dictionary with {motif: [[motif1.1, motif 1.2, motif 1.3],[motif2.1, motif 2.2, motif 2.3]}
         Input: [motif1, motif2, motif3]
-        Output: [[motif1.1, motif 1.2, motif 1.3],[motif2.1, motif 2.2, motif 2.3], ...]
+        Output: {motif1: [[motif1.1, motif 1.2, motif 1.3], motif2: [motif2.1, motif 2.2, motif 2.3]}
         '''
         motif_dict = {}
         for motif in self.motif_array:
@@ -142,136 +133,131 @@ class Motifs:
             all_characters = []
             for character in motif:
                 one_position_possible_chars = IPUAC_dict[character] # create an array for each position in the motif that holds every possible character that could be at that position according to its IUPAC
-                all_characters.append(one_position_possible_chars)
-
-            possible_strings_iters = list(product(*all_characters)) # create all possible strings
+                all_characters.append(one_position_possible_chars) 
+            possible_strings_iters = list(product(*all_characters)) # itertools product function creates all possible combinations for each ambiguous motif, but it returns them as lists (C, C, T, G, ...)
             possible_strings = []
             for i in range(0, len((possible_strings_iters))):
-                possible_strings.append(''.join(possible_strings_iters[i]))   
-            motif_dict[motif] = possible_strings
+                possible_strings.append(''.join(possible_strings_iters[i])) # use join to turn the output of itertools product into strings  
+            motif_dict[motif] = possible_strings 
         return motif_dict
 
     def get_all_motif_options(self):
         return self.motif_options_dict 
 
-
-
 class Plot:
     def __init__(self, plot_width, plot_height, file_name):
-        self.my_motif_colors = {}
-        self.width = plot_width
+        self.my_motif_colors = {} # dictionary which holds motifs and their rgb values
+        self.width = plot_width 
         self.height = plot_height 
-        self.file = file_name
+        self.file = file_name # file name for the png file
         self.surface = cairo.SVGSurface(self.file, self.width, self.height) # create png with w/h dimensions
-        self.context = cairo.Context(self.surface)
-
-    def set_motif_colors(self, motif_string, colors): # setter
+        self.context = cairo.Context(self.surface) # create context on which to draw
+        
+    def set_motif_colors(self, motif_string, colors): 
+        '''
+        This function takes as its input a motif string and a set of rgb colors, and creates a dictionary with the motif string as key and rgb numbers as values
+        Input: "GCUAG", [1,0.8,0.2 ]
+        Output: {"GCUAG": [1,0.8,0.2 ], ...}
+        '''
         self.my_motif_colors[motif_string] = colors
 
-    def get_colors_for_motif(self, motif_string): # getter
+    def get_colors_for_motif(self, motif_string): 
+        '''
+        This function takes as input a motif string and gets the rgb values for that motif string from the my_motif_colors dictionary and store them as color_r, color_b, color_g
+        Input: a motif
+        Outpu: 0.1, 0.6, 0.8 (some RGB colors)
+        '''
         color_r = self.my_motif_colors[motif_string][0]
         color_g = self.my_motif_colors[motif_string][1]
         color_b = self.my_motif_colors[motif_string][2]
         return color_r, color_g, color_b
     
-    def plot_motifs(self, motif_occurence_dict, sequence_pointer, seq, plot_index):
-        exon = sequence_pointer.find_exon_introns(seq)[0]
-        exon_start = exon[0]
-        exon_len = (exon[1]-exon[0])
-        seq_len = sequence_pointer.find_exon_introns(seq)[1]
-        self.context.set_source_rgb(0,0,0)
-        self.context.move_to(50,(100 + (200*(plot_index-1))))
-        self.context.set_font_size(20)
-        self.context.show_text(names_list[plot_index-1])
-        self.context.set_line_width(3)
-        self.context.set_source_rgb(0,0,0)
-        self.context.move_to(100, (200*plot_index)) # origin of the line, left-most point
-        self.context.line_to((100+seq_len),(200*plot_index)) # right-most point
-        self.context.stroke() 
-        self.context.rectangle((100+exon_start),(150 + (200*(plot_index-1))),exon_len,(100)) # (x, y, width, height)
-        self.context.set_source_rgba(0,0,0, 0.1)
+    def create_background_color(self): # set the backgroun color to white
+        '''
+        This function creates a white rectangle that is the height and width of the surface because cairo's default context background is black/transparent
+        '''
+        self.context.rectangle(0,0,self.width,self.height)
+        self.context.set_source_rgb(1, 1, 1)
         self.context.fill()
-
+    
+    def plot_motifs(self, motif_occurence_dict, sequence_obj, seq, plot_index):
+        '''
+        This function creates the motif plots 
+        Input: motif_occurence_dict (a dictionary of each motif and where it occurs in a sequence), a sequence object, a gene sequence, the index of the gen sequence in the gene sequence array)
+        Output: A plot which creates color-coded blocks of the motifs on a sequence, which is represented as a black line
+        '''
+        exon = sequence_obj.find_exon_introns(seq)[0] # get the exon start and stop from the sequence object
+        exon_start = exon[0] # the start is the first item in the exon list
+        exon_len = (exon[1]-exon[0]) # the length of the exon is the second item - first item in the exon list
+        seq_len = sequence_obj.find_exon_introns(seq)[1] # get the sequence length from the sequence object
+        self.context.set_source_rgb(0,0,0) # set the color of the text labels to be black
+        self.context.move_to(50,(100 + (200*(plot_index-1)))) # start the text at 50,100, and increment this start by 200 for every subsequent sequence
+        self.context.set_font_size(20) 
+        self.context.show_text(names_list[plot_index-1])
+        self.context.set_line_width(3) # width of the line representing the sequence
+        self.context.set_source_rgb(0,0,0) # color of sequence line = black
+        self.context.move_to(100, (200*plot_index)) # origin of the line, left-most point
+        self.context.line_to((100+seq_len),(200*plot_index)) # right-most point is sequence length - start position
+        self.context.stroke() 
+        self.context.rectangle((100+exon_start),(150 + (200*(plot_index-1))),exon_len,(100)) # Create the exon box (x, y, width, height)
+        self.context.set_source_rgba(0,0,0, 0.1) # make it transparent
+        self.context.fill()
+        
+        
 
         for motif in motif_occurence_dict.keys():
-        # YCGY, GCAUG, CATAG, YYYYYYYYYY
+        # for each motif : YCGY, GCAUG, CATAG, YYYYYYYYYY
             motif_blocks = [] # position array like this: [[79, 89], [80, 90], [76, 86], [78, 88], [75, 85], [77, 87], [74, 84], [73, 83]]
-            for location_array in motif_occurence_dict[motif]:
-                for location in location_array:
-                    start = location[0]
-                    length = (location[1]-location[0])
+            for location_array in motif_occurence_dict[motif]: # for the locations of each motif
+                for location in location_array: 
+                    start = location[0] # get the start of the motif
+                    length = (location[1]-location[0]) # get the length of the motif
                     motif_blocks.append(location)
-                    color_r, color_g, color_b = self.get_colors_for_motif(motif)
-                    self.context.set_source_rgba(color_r, color_g, color_b, 0.5)
-                    self.context.rectangle((100+start),(150 + (200*(plot_index-1))),length,(100)) # (x, y, width, height)
+                    color_r, color_g, color_b = self.get_colors_for_motif(motif) # get the color assigned to that motif 
+                    self.context.set_source_rgba(color_r, color_g, color_b, 0.5) 
+                    self.context.rectangle((100+start),(150 + (200*(plot_index-1))),length,(100)) # create a rectangle (x, y, width, height) of the right size and color
                     self.context.fill()
                     self.context.stroke()
-    
-        # Create Key
-        self.context.rectangle(850, 100, 20, 20) # (x, y, width, height)
-        self.context.set_source_rgba(0,0.2,0.8, 0.5) # blue
+            
+        
+    def create_key(self, motif, n):
+        self.context.rectangle(850, (100 + 40*n), 20, 20) # (x, y, width, height)
+        color_r, color_g, color_b = self.get_colors_for_motif(motif)
+        self.context.set_source_rgba(color_r, color_g, color_b, 0.5) # blue
         self.context.fill()
-
-        self.context.move_to(880,120)
+        
+        self.context.move_to(880,(120 + 40*n))
         self.context.set_font_size(20)
-        self.context.set_source_rgb(0,0,0)
-        self.context.show_text("CATAG")
+        self.context.set_source_rgb(0,0,0) # black
+        self.context.show_text(motif)
 
-        self.context.rectangle(850, 140, 20, 20) # (x, y, width, height)
-        self.context.set_source_rgba(0.2,0.9,0.8, 0.5) # green
-        self.context.fill()
-
-        self.context.move_to(880,160)
-        self.context.set_font_size(20)
-        self.context.set_source_rgb(0,0,0)
-        self.context.show_text("YYYYYYYYYY")
-
-        self.context.rectangle(850, 180, 20, 20) # (x, y, width, height)
-        self.context.set_source_rgba(1,0.6,0.3, 0.5) # orange
-        self.context.fill()
-
-        self.context.move_to(880,200)
-        self.context.set_font_size(20)
-        self.context.set_source_rgb(0,0,0)
-        self.context.show_text("YGCY")
-
-        self.context.rectangle(850, 220, 20, 20) # (x, y, width, height)
-        self.context.set_source_rgba(0,0,0,0.1) # orange
-        self.context.fill()
-
-        self.context.move_to(880,238)
-        self.context.set_font_size(20)
-        self.context.set_source_rgb(0,0,0)
-        self.context.show_text("EXON")
-    
-        self.surface.write_to_png("Figure_1.png")
+        self.surface.write_to_png(out_filename)
 
 
-motifs_pointer = Motifs(motif_filename)
-motif_dict = motifs_pointer.get_all_motif_options()
+motifs_obj = Motifs(motif_filename) # create motif object
+motif_list = motifs_obj.get_motif_array() # ["YGCY","GCAUG","CATAG","YYYYYYYYYY"]
+motif_dict = motifs_obj.get_all_motif_options()
 
 record_list = get_fasta_records(fasta_filename)
 names_list = get_names(fasta_filename)
 
-sequence1 = Sequence(record_list[0])
-sequence2 = Sequence(record_list[1])
-sequence3 = Sequence(record_list[2])
-sequence4 = Sequence(record_list[3])
+myplot = Plot(1200, 1200, out_filename)
+myplot.create_background_color()
 
-MOdict1 =  sequence1.get_motif_occurence_dict(motif_dict)
-MOdict2 = sequence2.get_motif_occurence_dict(motif_dict)
-MOdict3 = sequence3.get_motif_occurence_dict(motif_dict)
-MOdict4 =  sequence4.get_motif_occurence_dict(motif_dict)
+color_list = [[1,0.6,0.3],[1,0.8,0.2 ],[0,0.2,0.8 ], [0.2,0.9,0.8],[0.5,0.3,1]] # yellow, blue, green, orange, # purple
 
-myplot = Plot(1200, 1200, "Figure_1.png")
-myplot.set_motif_colors("GCUAG", [1,0.8,0.2 ]) # yellow
-myplot.set_motif_colors("CATAG", [0,0.2,0.8 ]) # blue
-myplot.set_motif_colors("YYYYYYYYYY", [0.2,0.9,0.8]) # green
-myplot.set_motif_colors("YGCY", [1,0.6,0.3]) # orange
-
-myplot.plot_motifs(MOdict1, sequence1, record_list[0], 1)
-myplot.plot_motifs(MOdict2, sequence2, record_list[1], 2)
-myplot.plot_motifs(MOdict3, sequence3, record_list[2], 3)
-myplot.plot_motifs(MOdict4, sequence4, record_list[3], 4)
-
-
+for i in zip(motif_list, color_list):
+   myplot.set_motif_colors(i[0].upper(), i[1]) 
+   
+n = 0
+for i in record_list:
+    n += 1
+    sequence = Sequence(i) # create sequence object
+    MOdict = sequence.get_motif_occurence_dict(motif_dict)
+    myplot.plot_motifs(MOdict, sequence, i, n)
+    
+for i in range(len(motif_list)):
+    n = i
+    motif = motif_list[i].upper()
+    myplot.create_key(motif, n)
+    
