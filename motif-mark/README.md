@@ -1,6 +1,7 @@
 ## MOTIF MARK
 
 The script motif-mark-oop.py uses object oriented python code to visualize the locations of motifs on gene sequences. 
+motif-mark-oop.py can handle multipe gene sequences, and image size will increase with number of sequences. motif-mark-oop.py can handle and as many as 6 motifs. To add capacity for more motifs, more rgb values can be added to color_list.
 
 ## Running motif-mark-oop.py
 
@@ -40,7 +41,7 @@ taaatcaactttaaaatatatatccttttttctgttatagagttgtaaagtacaatgaaa
 ```
 
 ### Run motif-mark-oop.py
-Download motif-mark-oop.py in the same directory as your fasta file and motif file (otherwise, pass the complete path to your fasta file and motif file as arguments).
+Download motif-mark-oop.py in the same directory as your fasta file and motif file (otherwise, pass the complete path to your fasta file and motif file as arguments). The output png figure will be named with the same file prefix as the input fasta file, followed by ".png"
 
 In the terminal, write:
 ```
