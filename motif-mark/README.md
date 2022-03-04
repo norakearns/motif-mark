@@ -1,7 +1,7 @@
 ## MOTIF MARK
 
 The script motif-mark-oop.py uses object oriented python code to visualize the locations of motifs on gene sequences. 
-motif-mark-oop.py can handle multipe gene sequences, and image size will increase with number of sequences. motif-mark-oop.py can handle and as many as 6 motifs. To add capacity for more motifs, more rgb values can be added to color_list.
+motif-mark-oop.py can handle multipe gene sequences, and image size will increase with number of sequences. motif-mark-oop.py can handle and as many as 6 motifs. To add capacity for more motifs, more rgb values can be added to color_list (line 244).
 
 ## Running motif-mark-oop.py
 
