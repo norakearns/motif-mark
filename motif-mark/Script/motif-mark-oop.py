@@ -3,11 +3,8 @@ import itertools
 from itertools import product
 import re
 import cairo
-import math
-from IPython import display
-from IPython.display import SVG, display, Image
-import re
 import argparse
+from IPython import display
 
 def get_args():
     parser = argparse.ArgumentParser(description="A program to input coverage limit")
@@ -15,9 +12,9 @@ def get_args():
     parser.add_argument("-m", help="motifs file", required=True, type=str)
     return parser.parse_args()
 
-args = get_args()
-fasta_filename = args.f # -f file carrying the sequences in fasta format
-motif_filename = args.m # -m file carrying the motifs
+# args = get_args()
+fasta_filename = "Figure_1.fasta" # -f file carrying the sequences in fasta format
+motif_filename = "Fig_1_motifs.txt" # -m file carrying the motifs
 out_filename = fasta_filename.split('.')[0] + ".png"
 
 # Dictionary which holds all the possible nucleotides represented by a specific IUPAC characters
@@ -247,8 +244,9 @@ myplot.create_background_color()
 color_list = [[1,0.6,0.3],[1,0.8,0.2 ],[0,0.2,0.8 ], [0.2,0.9,0.8],[0.5,0.3,1]] # yellow, blue, green, orange, # purple
 
 for i in zip(motif_list, color_list):
-   myplot.set_motif_colors(i[0].upper(), i[1]) 
-   
+    myplot.set_motif_colors(i[0].upper(), i[1]) 
+    
+    
 n = 0
 for i in record_list:
     n += 1
