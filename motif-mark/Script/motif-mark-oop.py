@@ -241,7 +241,16 @@ names_list = get_names(fasta_filename)
 myplot = Plot(1200, 1200, out_filename)
 myplot.create_background_color()
 
-color_list = [[1,0.6,0.3],[1,0.8,0.2 ],[0,0.2,0.8 ], [0.2,0.9,0.8],[0.5,0.3,1]] # yellow, blue, green, orange, # purple
+# Dictionary of color lists. Length of the list is dependent on length of the motif list.
+color_list_dict = { 4: [[1,0.6,0.3],[1,0.8,0.2 ],[0,0.2,0.8 ], [0.2,0.9,0.8]], 5: [[1,0.6,0.3],[1,0.8,0.2 ],[0,0.2,0.8 ], [0.2,0.9,0.8],[0.5,0.3,1]],
+                       6: [[1,0.6,0.3],[1,0.8,0.2 ],[0,0.2,0.8 ], [0.2,0.9,0.8],[0.5,0.3,1], [0.7,0,0.1]],
+                       7: [[1,0.6,0.3],[1,0.8,0.2 ],[0,0.2,0.8 ], [0.2,0.9,0.8],[0.5,0.3,1], [0.7,0,0.1], [0.5,0.7,0.6]],
+                       8: [[1,0.6,0.3],[1,0.8,0.2 ],[0,0.2,0.8 ], [0.2,0.9,0.8],[0.5,0.3,1], [0.7,0,0.1], [0.5,0.7,0.6], [0.1,0.7,0.6]],
+                       9: [[1,0.6,0.3],[1,0.8,0.2 ],[0,0.2,0.8 ], [0.2,0.9,0.8],[0.5,0.3,1], [0.7,0,0.1], [0.5,0.7,0.6], [0.1,0.7,0.6], [0.5,0.7,0.5]],
+                       10: [[1,0.6,0.3],[1,0.8,0.2 ],[0,0.2,0.8 ], [0.2,0.9,0.8],[0.5,0.3,1], [0.7,0,0.1], [0.5,0.7,0.6], [0.1,0.7,0.6], [0.5,0.7,0.5], [0.5,0.3,0.4]] }
+
+len_motif_list = len(motif_list)
+color_list = color_list_dict[len_motif_list] # get a list of colors the length of the list of motifs so that each motif has a color
 
 for i in zip(motif_list, color_list):
     myplot.set_motif_colors(i[0].upper(), i[1]) 
