@@ -215,8 +215,17 @@ class Plot:
                     self.context.rectangle((100+start),(150 + (200*(plot_index-1))),length,(100)) # create a rectangle (x, y, width, height) of the right size and color
                     self.context.fill()
                     self.context.stroke()
-            
+
+    def exon_key(self):
+        self.context.rectangle(850, 60, 20, 20) # (x, y, width, height)
+        self.context.set_source_rgba(0,0,0, 0.1) # blue
+        self.context.fill()
         
+        self.context.move_to(880,80)
+        self.context.set_font_size(20)
+        self.context.set_source_rgb(0,0,0) # black
+        self.context.show_text("EXON")
+            
     def create_key(self, motif, n):
         self.context.rectangle(850, (100 + 40*n), 20, 20) # (x, y, width, height)
         color_r, color_g, color_b = self.get_colors_for_motif(motif)
@@ -262,6 +271,8 @@ for i in record_list:
     sequence = Sequence(i) # create sequence object
     MOdict = sequence.get_motif_occurence_dict(motif_dict)
     myplot.plot_motifs(MOdict, sequence, i, n)
+
+myplot.exon_key()
     
 for i in range(len(motif_list)):
     n = i
