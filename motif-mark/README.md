@@ -47,7 +47,7 @@ taaatcaactttaaaatatatatccttttttctgttatagagttgtaaagtacaatgaaa
 ```
 
 ### Run motif-mark-oop.py
-Download motif-mark-oop.py in the same directory as your fasta file and motif file (otherwise, pass the complete path to your fasta file and motif file as arguments). The output png figure will be named with the same file prefix as the input fasta file, followed by ".png"
+Download motif-mark-oop.py from the **Script** folder in the same directory as your fasta file and motif file (otherwise, pass the complete path to your fasta file and motif file as arguments). The output png figure will be named with the same file prefix as the input fasta file, followed by ".png"
 
 In the terminal, write:
 ```
