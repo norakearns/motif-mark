@@ -5,7 +5,7 @@ The script motif-mark-oop.py uses object oriented python code to visualize the l
 ### Features
 - ambiguous nucleotide handling (Y,W,S,N etc).
 - handles multipe gene sequences, and image size will increase with number of sequences. 
-- handles as many as 6 motifs. To add capacity for more motifs, more rgb values can be added to color_list (line 244).
+- handles as many as 10 motifs.
 - handles overlapping motifs - motifs are transparent
 - visualizes exons and introns
 
