@@ -55,7 +55,8 @@ In the terminal, write:
 ```
 
 motif-mark-oop.py will output a single png file with all of your sequences annotated like the example below:
-![Figure_1](https://user-images.githubusercontent.com/59736592/156443067-f34f3897-0263-456d-91b5-64edeb626d08.png)
+![Figure_1](https://user-images.githubusercontent.com/59736592/157071692-f3ed718c-8a6c-4d32-a4a2-86f8c2161abb.png)
+
 
 
 
