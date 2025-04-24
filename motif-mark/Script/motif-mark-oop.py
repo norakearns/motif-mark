@@ -12,9 +12,9 @@ def get_args():
     parser.add_argument("-m", help="motifs file", required=True, type=str)
     return parser.parse_args()
 
-# args = get_args()
-fasta_filename = "Figure_1.fasta" # -f file carrying the sequences in fasta format
-motif_filename = "Fig_1_motifs.txt" # -m file carrying the motifs
+args = get_args()
+fasta_filename = args.f # -f file carrying the sequences in fasta format
+motif_filename = args.m # -m file carrying the motifs
 out_filename = fasta_filename.split('.')[0] + ".png"
 
 # Dictionary which holds all the possible nucleotides represented by a specific IUPAC characters
@@ -44,20 +44,19 @@ def get_fasta_records(file):
     Input: fasta_file_handle
     Output: sequence
     '''
-    file_handle = open(file, "rt")
-    record_list = []
-    for line in file_handle:
-        all_lines = file_handle.read()
-        record_array = all_lines.split('>')
-        record0_line_array = record_array[0].split('\n') 
-        record0_seq_line = ('').join(record0_line_array)
-        record_list.append(record0_seq_line)
-        for record in record_array[1:]:
-            record_line_array = record.split('\n')  
-            seqs = record_line_array[1:]
-            seq_line = ('').join(seqs)
-            record_list.append(seq_line)
-    return record_list
+    records = []
+    with open(file, 'r') as f:
+        seq = ''
+        for line in f:
+            if line.startswith('>'):
+                if seq:
+                    records.append(seq)
+                    seq = ''
+            else:
+                seq += line.strip()
+        if seq:
+            records.append(seq)
+    return records
 
 class Sequence:
     def __init__(self, sequence):
@@ -244,7 +243,7 @@ motifs_obj = Motifs(motif_filename) # create motif object
 motif_list = motifs_obj.get_motif_array() # ["YGCY","GCAUG","CATAG","YYYYYYYYYY"]
 motif_dict = motifs_obj.get_all_motif_options()
 
-record_list = get_fasta_records(fasta_filename)
+records = get_fasta_records(fasta_filename)
 names_list = get_names(fasta_filename)
 
 myplot = Plot(1200, 1200, out_filename)
@@ -266,7 +265,7 @@ for i in zip(motif_list, color_list):
     
     
 n = 0
-for i in record_list:
+for record in records:
     n += 1
     sequence = Sequence(i) # create sequence object
     MOdict = sequence.get_motif_occurence_dict(motif_dict)
@@ -279,3 +278,5 @@ for i in range(len(motif_list)):
     motif = motif_list[i].upper()
     myplot.create_key(motif, n)
     
+if __name__ == "__main__":
+    main()
